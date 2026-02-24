@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Star Citizen - Wikelo Crafting Tracker</title>
+    <style>
+        :root {
+            --color-bg: #0f172a;
+            --color-surface: #1e293b;
+            --color-border: #334155;
+            --color-text: #f1f5f9;
+            --color-text-secondary: #cbd5e1;
+            --color-primary: #38bdf8;
+            --color-success: #22c55e;
+            --color-warning: #eab308;
+            --color-muted: #64748b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: var(--color-surface);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid var(--color-border);
+        }
+
+        h1 {
+            color: var(--color-primary);
+            margin-bottom: 10px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--color-border);
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            color: var(--color-text-secondary);
+            cursor: pointer;
+            font-size: 16px;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            color: var(--color-primary);
+        }
+
+        .tab.active {
+            color: var(--color-primary);
+            border-bottom-color: var(--color-primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .inventory-section {
+            background: var(--color-surface);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid var(--color-border);
+        }
+
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-top: 15px;
+            max-width: 600px;
+        }
+
+        .inventory-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .inventory-item label {
+            flex: 1;
+            color: var(--color-text-secondary);
+            font-size: 14px;
+        }
+
+        .inventory-item input {
+            width: 80px;
+            padding: 8px;
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            border-radius: 4px;
+            color: var(--color-text);
+            font-size: 14px;
+        }
+
+        .recipes-section {
+            background: var(--color-surface);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--color-border);
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-bar input {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px;
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            border-radius: 4px;
+            color: var(--color-text);
+            font-size: 14px;
+        }
+
+        .filter-bar select {
+            padding: 10px;
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            border-radius: 4px;
+            color: var(--color-text);
+            font-size: 14px;
+        }
+
+        .recipe-card {
+            background: var(--color-bg);
+            border: 2px solid var(--color-border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .recipe-card.craftable {
+            border-color: var(--color-success);
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+        }
+
+        .recipe-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .recipe-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--color-primary);
+        }
+
+        .recipe-reward {
+            font-size: 14px;
+            color: var(--color-text-secondary);
+        }
+
+        .ingredients-list {
+            display: grid;
+            gap: 8px;
+        }
+
+        .ingredient {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            background: var(--color-surface);
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .ingredient.available {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--color-success);
+        }
+
+        .ingredient.insufficient {
+            background: rgba(234, 179, 8, 0.1);
+            color: var(--color-warning);
+        }
+
+        .ingredient-amount {
+            font-weight: 600;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            flex: 1;
+            min-width: 200px;
+            background: var(--color-surface);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--color-border);
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--color-text-secondary);
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--color-primary);
+        }
+
+        .clear-btn {
+            padding: 10px 20px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .clear-btn:hover {
+            background: #dc2626;
+        }
+    </style>
+<script type="text/javascript" nonce="542134618cc04cf2b46dff5bc8b" src="//local.adguard.org?ts=1771907980362&amp;type=content-script&amp;dmn=ppl-ai-code-interpreter-files.s3.amazonaws.com&amp;url=https%3A%2F%2Fppl-ai-code-interpreter-files.s3.amazonaws.com%2Fweb%2Fdirect-files%2F3a8be94cbe8c13dbb8adf7769f1a33db%2Fa8d9b537-7610-453e-ae4b-a5d53a6d365a%2Fcanvas-app%2Findex.html%3Fresponse-content-disposition%3Dattachment%253B%2520filename%253DWikelo%2520Crafting%2520Tracker.html%253B%2520filename%252A%253DUTF-8%2527%2527Wikelo%252520Crafting%252520Tracker.html%26AWSAccessKeyId%3DASIA2F3EMEYEVCJV2SX2%26Signature%3DcqlVV6GGdHCHifykyfK920h6Pbg%253D%26x-amz-security-token%3DIQoJb3JpZ2luX2VjECYaCXVzLWVhc3QtMSJHMEUCIQCQmmqMN%252FbUFeokTplJIViLbG1JdUgkce2BXJQKxg7ScQIgOnZRyT5NzqyHAle1D1Ft2cziUpzV83sa4%252F1LZg4xS1Uq%252FAQI7%252F%252F%252F%252F%252F%252F%252F%252F%252F%252F%252FARABGgw2OTk3NTMzMDk3MDUiDFZiMvdCioQqLsKVjCrQBKjwXxp6ZiZnq%252BuuYEqV9ICDBtOZj%252BwOxcGK2ncOm5x3oH%252B8twYpq0aFpUVzGILM2RZh1%252BIzbwYGjb1v18SVRcifpFmXdA0G9apN5L1WBFznwVuUA4V45oGIaJ%252B%252FDca8ZNC7%252Bxt6tv5ez3D9i3e1Z20LD3YRMzfHetUoISCtRRjFcq89NhpLTfbfO9vuCT5JQZgiCDpmK8NQAJJV7ANhn%252Bn8TS%252FtRvfVoG8HfC2lAMouWCgOmXn3%252BDc4Blbo%252Fg%252FbKRJVGaTR5L2ePnGhE0UCu4Dw%252FaibNlk2bgIBdiTdkYlFCM3nruDvGPuaOFzy4qXd%252F%252FxWTRZvL3x6pAaYCE88qXrf%252FoqoePDJ5XTeQSvGa81AYvtsb59h1oiSSVkPxkVyiFUdbikEYn1nNzEtXDcUswKkQbdoQ8n5owsyQ%252BopHcUgCJ2HriyVznBLkSwkcPE%252FZyJ4izZfCm66ZrL2yCfrybP2%252BczbX6gwZLs6YOp94fr20vhbUuJ2zWbah5sdJDNZWxG1EQMqMxcvFEm9B%252B8Bd5gk1QyX4B21VSPo5Hw1gO6rjPYxEV6%252FzduTWLtx081inVG2sZd34%252F9Sl3crO9ua0hwd5KHuKadZY7deLOfUYfsE4m27vg1x4mkVv4njERgZ2JDplMEEyd9bm8YEMQuPmACeG3sAJMlj%252BBsVGtQoCuVuRw6ZoERQCWti8CT%252BYhKqQo7RyKqcKDRb5%252FdPj4EiueeQ4g5GphoPDzI4mMQ5l9miw1sPTjscUVLKFhSRGBiBOCkjl8IXe%252BPKsiUcnBVJ8pkw6%252FX0zAY6mAFgFlTcn5o5zxFTlkGSuax7QlTS4uu8Oam2OKTMdRjuQ43BpnMP0DyYf%252BObNHteBKHDT%252Fv%252F4WlozOZCNOpfGVaE318947sWXWh%252BapkQS1vbDt0FwlLdmR%252FJJv6M7qcoG3Ndhc1Iy73LOnSOp%252B37ppgLq46N1eVbrVOPsJRHErIS3KJvk29lzbPRhgCoPts%252BpSQeIvEeBZQJqg%253D%253D%26Expires%3D1771913895&amp;app=org.mozilla.fenix&amp;css=3&amp;js=1&amp;rel=1&amp;rji=1&amp;sbe=1&amp;stealth=0"></script><script type="text/javascript" nonce="542134618cc04cf2b46dff5bc8b" src="//local.adguard.org?ts=1771907980362&amp;name=Disable%20AMP&amp;name=AdGuard%20Extra&amp;type=user-script"></script></head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Star Citizen - Wikelo Crafting Tracker</h1>
+            <p style="color: var(--color-text-secondary);">Śledź swoje składniki i odkryj, które przepisy możesz zrealizować</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('recipes')">Przepisy</button>
+            <button class="tab" onclick="switchTab('inventory')">Ekwipunek</button>
+        </div>
+
+        <div id="recipes-tab" class="tab-content active">
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-label">Możliwe do zrobienia</div>
+                    <div class="stat-value" id="craftable-count">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Wszystkie przepisy</div>
+                    <div class="stat-value" id="total-recipes">0</div>
+                </div>
+            </div>
+
+            <div class="recipes-section">
+                <div class="filter-bar">
+                    <input type="text" id="search" placeholder="Szukaj przepisu lub składnika..." onkeyup="filterRecipes()">
+                    <select id="filter-status" onchange="filterRecipes()">
+                        <option value="all">Wszystkie</option>
+                        <option value="craftable">Możliwe do zrobienia</option>
+                        <option value="partial">Częściowo możliwe</option>
+                    </select>
+                </div>
+                <div id="recipes-container"></div>
+            </div>
+        </div>
+
+        <div id="inventory-tab" class="tab-content">
+            <div class="inventory-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h2>Twój ekwipunek</h2>
+                    <button class="clear-btn" onclick="clearInventory()">Wyczyść ekwipunek</button>
+                </div>
+                <div class="inventory-grid" id="inventory-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const recipes = [
+            {name:"Make ATLS shoot",items:{"Argo ATLS":1,"Wikelo Favor":2,"Irradiated Valakkar Fang (Apex)":5,"NN-13 Cannon":2},reward:"ATLS IKTI",rep:20},
+            {name:"Make jumpy ATLS shoot",items:{"Argo ATLS Geo":1,"Argo ATLS IKTI":1,"NN-13 Cannon":2,"Wikelo Favor":1},reward:"ATLS GEO IKTI",rep:20},
+            {name:"ATLS Snowland Color",items:{"Wikelo Favor":1,"Irradiated Valakkar Fang (Adult)":5,"Irradiated Valakkar Pearl (Grade AAA)":1,"Argo ATLS":1},reward:"ATLS GEO Snowland",rep:20},
+            {name:"ATLS Orange Line",items:{"Wikelo Favor":1,"Quantanium":36,"Argo ATLS":1,"Copper":8,"Tungsten":8,"Corundum":8},reward:"ATLS GEO Orange Line",rep:20},
+            {name:"ATLS Cool Metal Color",items:{"Wikelo Favor":1,"Carinite":10,"Carinite (Pure)":1,"Argo ATLS":1},reward:"ATLS GEO Cool Metal",rep:20},
+            {name:"Noxy Mod",items:{"Wikelo Favor":4,"Nox":1},reward:"Nox",rep:20},
+            {name:"Pulse Plus",items:{"Wikelo Favor":4,"Pulse":1},reward:"Pulse",rep:20},
+            {name:"Make a Ursa Mod",items:{"Wikelo Favor":4,"Saldynium (Ore)":20,"Jaclium (Ore)":20},reward:"Ursa Medivac",rep:20},
+            {name:"Where Wolf? Here Wolf",items:{"Wikelo Favor":10,"Vanduul Plating":10,"Vanduul Metal":10,"Large Artifact Fragment (Pristine)":1},reward:"L-21 Wolf",rep:30},
+            {name:"Golem Rocks",items:{"Wikelo Favor":2,"ASD Secure Drive":15},reward:"Golem",rep:30},
+            {name:"Upgrade Intrepid",items:{"Government Cartography Agency Medal (Pristine)":1,"Wikelo Favor":3,"Intrepid":1},reward:"Intrepid",rep:30},
+            {name:"Fortune ship for you",items:{"Wikelo Favor":3,"Carinite (Pure)":1,"Fortune":1},reward:"Fortune",rep:30},
+            {name:"Spirit Cargo mod",items:{"Wikelo Favor":8,"Tevarin War Service Marker (Pristine)":1,"C1 Spirit":1},reward:"C1 Spirit",rep:30},
+            {name:"Zeus Special",items:{"Wikelo Favor":10,"UEE 6th Platoon Medal (Pristine)":2,"Zeus Mk II ES":1},reward:"Zeus Mk II ES",rep:30},
+            {name:"Zeus Cargo Special",items:{"Wikelo Favor":20,"Ace Interceptor Helmet":10,"Carinite (Pure)":2},reward:"Zeus Mk II CL",rep:100},
+            {name:"More than a Max",items:{"Wikelo Favor":30,"Ace Interceptor Helmet":10,"Carinite (Pure)":3,"Irradiated Valakkar Pearl (Grade AAA)":3},reward:"Starlancer MAX",rep:250},
+            {name:"Want Taurus ship",items:{"Wikelo Favor":30,"Carinite (Pure)":3,"Irradiated Valakkar Pearl (Grade AAA)":3,"Government Cartography Agency Medal (Pristine)":3},reward:"Constellation Taurus",rep:250},
+            {name:"Peregrine Wikelo Mod",items:{"Wikelo Favor":4,"DCHS-05 Orbital Positioning Comp-Board":1,"Sabre Peregrine":1},reward:"Sabre Peregrine",rep:30},
+            {name:"Firebird Mod",items:{"Wikelo Favor":15,"DCHS-05 Orbital Positioning Comp-Board":4,"Ace Interceptor Helmet":3,"Government Cartography Agency Medal (Pristine)":1},reward:"Sabre Firebird",rep:100},
+            {name:"Build a Mod Scorpius",items:{"Wikelo Favor":15,"DCHS-05 Orbital Positioning Comp-Board":4,"Tevarin War Service Marker (Pristine)":1},reward:"Scorpius",rep:100},
+            {name:"Wikelo Navy F7",items:{"Wikelo Favor":16,"DCHS-05 Orbital Positioning Comp-Board":3,"Ace Interceptor Helmet":5,"Government Cartography Agency Medal (Pristine)":1},reward:"F7C-M Super Hornet Mk II",rep:100},
+            {name:"Guardian Fight Mod",items:{"Wikelo Favor":20,"Irradiated Valakkar Pearl (Grade AA)":15,"Ace Interceptor Helmet":10,"Tevarin War Service Marker (Pristine)":1},reward:"Guardian",rep:100},
+            {name:"Guardian take down ship",items:{"Wikelo Favor":25,"Irradiated Valakkar Pearl (Grade AA)":15,"DCHS-05 Orbital Positioning Comp-Board":15,"UEE 6th Platoon Medal (Pristine)":2},reward:"Guardian QI",rep:100},
+            {name:"Guardian Wik-X",items:{"Wikelo Favor":25,"Ace Interceptor Helmet":15,"Large Artifact Fragment (Pristine)":2,"Vanduul Plating":30,"Vanduul Metal":30},reward:"Guardian MX",rep:100},
+            {name:"F8 War Mod",items:{"Wikelo Favor":40,"Carinite (Pure)":4,"Irradiated Valakkar Pearl (Grade AAA)":4,"Tevarin War Service Marker (Pristine)":4},reward:"F8C Lightning (Military Spec)",rep:250},
+            {name:"Sneaky Stabber",items:{"Wikelo Favor":40,"DCHS-05 Orbital Positioning Comp-Board":20,"Carinite (Pure)":5,"Irradiated Valakkar Pearl (Grade AAA)":5},reward:"F8C Lightning (Stealth Spec)",rep:250},
+            {name:"What is Terrapin?",items:{"Wikelo Favor":15,"ASD Secure Drive":10,"Tevarin War Service Marker (Pristine)":1},reward:"Terrapin Medic",rep:100},
+            {name:"New Move big Starlancer Ship",items:{"Wikelo Favor":50,"Ace Interceptor Helmet":15,"ASD Secure Drive":30,"Irradiated Valakkar Pearl (Grade AAA)":3,"Tevarin War Service Marker (Pristine)":3,"Carinite (Pure)":3,"DCHS-05 Orbital Positioning Comp-Board":3},reward:"Starlancer TAC",rep:250},
+            {name:"Starfighter Inferno Special",items:{"Wikelo Favor":10,"Yormandi Tongue":5,"Ace Interceptor Helmet":5,"UEE 6th Platoon Medal (Pristine)":1},reward:"Ares Star Fighter Inferno",rep:100},
+            {name:"Sneaky Starfighter Ion",items:{"Wikelo Favor":10,"Yormandi Eye":10,"Ace Interceptor Helmet":5,"Tevarin War Service Marker (Pristine)":1},reward:"Ares Star Fighter Ion",rep:100},
+            {name:"Prowler More Utility",items:{"Wikelo Favor":40,"Yormandi Eye":20,"Yormandi Tongue":10,"Irradiated Valakkar Pearl (Grade AAA)":3,"Carinite (Pure)":3},reward:"Prowler Utility",rep:250},
+            {name:"Starlifter A2 War Mod",items:{"Wikelo Favor":50,"Polaris Bit":20,"MG Scrip":20,"ASD Secure Drive":6,"Irradiated Valakkar Pearl (Grade AAA)":6,"Tevarin War Service Marker (Pristine)":6,"DCHS-05 Orbital Positioning Comp-Board":6,"Carinite (Pure)":6},reward:"A2 Hercules Starlifter",rep:500},
+            {name:"Asgard Fight Mod",items:{"Wikelo Favor":50,"ASD Secure Drive":3,"RCMBNT-PWL-1":5,"RCMBNT-PWL-2":5,"RCMBNT-PWL-3":5,"RCMBNT-RGL-1":5,"RCMBNT-RGL-2":5,"RCMBNT-RGL-3":5,"RCMBNT-XTL-1":5,"RCMBNT-XTL-2":5,"RCMBNT-XTL-3":5},reward:"Asgard",rep:250},
+            {name:"RSI Meteor Mod",items:{"Wikelo Favor":10,"Ace Interceptor Helmet":5,"Large Artifact Fragment (Pristine)":1,"Vanduul Plating":10,"Vanduul Metal":10},reward:"Meteor",rep:30},
+            {name:"Now make Polaris. Short Time Deal.",items:{"Wikelo Favor":50,"Carinite":20,"Irradiated Valakkar Fang (Apex)":20,"MG Scrip":20,"Polaris Bit":15,"ASD Secure Drive":15,"Ace Interceptor Helmet":15,"Irradiated Valakkar Pearl (Grade AAA)":15,"UEE 6th Platoon Medal (Pristine)":15,"Carinite (Pure)":15,"DCHS-05 Orbital Positioning Comp-Board":10,"RCMBNT-PWL-1":1,"RCMBNT-PWL-2":1,"RCMBNT-PWL-3":1,"RCMBNT-RGL-1":1,"RCMBNT-RGL-2":1,"RCMBNT-RGL-3":1,"RCMBNT-XTL-1":1,"RCMBNT-XTL-2":1,"RCMBNT-XTL-3":1},reward:"Polaris Wikelo Special",rep:1000},
+            {name:"AEGIS Idris P",items:{"Wikelo Favor":50,"Polaris Bit":50,"DCHS-05 Orbital Positioning Comp-Board":50,"Carinite":50,"Irradiated Valakkar Fang (Apex)":50,"MG Scrip":50,"Ace Interceptor Helmet":50,"ASD Secure Drive":30,"Irradiated Valakkar Pearl (Grade AAA)":30,"UEE 6th Platoon Medal (Pristine)":30,"Carinite (Pure)":30,"RCMBNT-PWL-1":5,"RCMBNT-PWL-2":5,"RCMBNT-PWL-3":5,"RCMBNT-RGL-1":5,"RCMBNT-RGL-2":5,"RCMBNT-RGL-3":5,"RCMBNT-XTL-1":5,"RCMBNT-XTL-2":5,"RCMBNT-XTL-3":5},reward:"Idris-P",rep:0}
+        ];
+
+        recipes.sort((a,b) => b.rep - a.rep);
+
+        let inventory = {};
+        let allIngredients = new Set();
+
+        recipes.forEach(recipe => {
+            Object.keys(recipe.items).forEach(item => allIngredients.add(item));
+        });
+
+        allIngredients = Array.from(allIngredients).sort();
+
+        allIngredients.forEach(item => {
+            inventory[item] = 0;
+        });
+
+        function loadInventory() {
+            const saved = localStorage.getItem('scInventory');
+            if (saved) {
+                inventory = JSON.parse(saved);
+            }
+        }
+
+        function saveInventory() {
+            localStorage.setItem('scInventory', JSON.stringify(inventory));
+        }
+
+        function renderInventory() {
+            const grid = document.getElementById('inventory-grid');
+            grid.innerHTML = '';
+            allIngredients.forEach(item => {
+                if (vehicleItems.has(item)) return;
+                
+                const div = document.createElement('div');
+                div.className = 'inventory-item';
+                div.innerHTML = `
+                    <label>${item}</label>
+                    <input type="number" min="0" value="${inventory[item] || 0}" onchange="updateInventory('${item}', this.value)">
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        function updateInventory(item, value) {
+            inventory[item] = parseInt(value) || 0;
+            saveInventory();
+            renderRecipes();
+        }
+
+        function clearInventory() {
+            if (confirm('Czy na pewno chcesz wyczyścić cały ekwipunek?')) {
+                allIngredients.forEach(item => {
+                    inventory[item] = 0;
+                });
+                saveInventory();
+                renderInventory();
+                renderRecipes();
+            }
+        }
+
+        function checkRecipe(recipe) {
+            let available = 0;
+            let total = 0;
+            let allAvailable = true;
+
+            Object.entries(recipe.items).forEach(([item, needed]) => {
+                if (vehicleItems.has(item)) return;
+                
+                total++;
+                const have = inventory[item] || 0;
+                if (have >= needed) {
+                    available++;
+                } else {
+                    allAvailable = false;
+                }
+            });
+
+            return {available, total, allAvailable};
+        }
+
+        const vehicleItems = new Set([
+            "Argo ATLS", "Argo ATLS Geo", "Argo ATLS IKTI", "Nox", "Pulse", 
+            "Intrepid", "Fortune", "C1 Spirit", "Zeus Mk II ES", "Sabre Peregrine",
+            "Sabre Firebird"
+        ]);
+
+        function renderRecipes() {
+            const container = document.getElementById('recipes-container');
+            const searchTerm = document.getElementById('search').value.toLowerCase();
+            const filterStatus = document.getElementById('filter-status').value;
+
+            let craftableCount = 0;
+            let filtered = recipes.filter(recipe => {
+                const matchesSearch = recipe.name.toLowerCase().includes(searchTerm) || 
+                                     Object.keys(recipe.items).some(item => item.toLowerCase().includes(searchTerm));
+                
+                const status = checkRecipe(recipe);
+                let matchesFilter = true;
+
+                if (filterStatus === 'craftable') {
+                    matchesFilter = status.allAvailable;
+                } else if (filterStatus === 'partial') {
+                    matchesFilter = status.available > 0 && !status.allAvailable;
+                }
+
+                if (status.allAvailable) craftableCount++;
+
+                return matchesSearch && matchesFilter;
+            });
+
+            container.innerHTML = '';
+            filtered.forEach(recipe => {
+                const status = checkRecipe(recipe);
+                const card = document.createElement('div');
+                card.className = `recipe-card ${status.allAvailable ? 'craftable' : ''}`;
+                
+                let ingredientsHTML = '';
+                Object.entries(recipe.items).forEach(([item, needed]) => {
+                    if (vehicleItems.has(item)) return;
+                    
+                    const have = inventory[item] || 0;
+                    const available = have >= needed;
+                    ingredientsHTML += `
+                        <div class="ingredient ${available ? 'available' : 'insufficient'}">
+                            <span>${item}</span>
+                            <span class="ingredient-amount">${have}/${needed}</span>
+                        </div>
+                    `;
+                });
+
+                card.innerHTML = `
+                    <div class="recipe-header">
+                        <div class="recipe-name">${recipe.name} <span style="color: var(--color-warning); font-size: 16px; margin-left: 8px;">(${recipe.rep} rep)</span></div>
+                        <div class="recipe-reward">→ ${recipe.reward}</div>
+                    </div>
+                    <div class="ingredients-list">
+                        ${ingredientsHTML}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            document.getElementById('craftable-count').textContent = craftableCount;
+            document.getElementById('total-recipes').textContent = recipes.length;
+        }
+
+        function filterRecipes() {
+            renderRecipes();
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            if (tab === 'recipes') {
+                document.querySelector('.tab:nth-child(1)').classList.add('active');
+                document.getElementById('recipes-tab').classList.add('active');
+            } else {
+                document.querySelector('.tab:nth-child(2)').classList.add('active');
+                document.getElementById('inventory-tab').classList.add('active');
+            }
+        }
+
+        loadInventory();
+        renderInventory();
+        renderRecipes();
+    </script>
+</body>
+</html>
